@@ -42,6 +42,7 @@ export const AdminPage: React.FC = () => {
   const [stats, setStats] = useState<DepartmentStats>(dataService.getStats());
   const [faculty, setFaculty] = useState<FacultyMember[]>([]);
   const [batches, setBatches] = useState<BatchSummary[]>([]);
+  const [selectedAdminBatch, setSelectedAdminBatch] = useState<string>('2024-2025');
   const [research, setResearch] = useState<ResearchPaper[]>([]);
   const [stories, setStories] = useState<SuccessStory[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -264,6 +265,45 @@ export const AdminPage: React.FC = () => {
     showToast("Backup JSON file exported.");
   };
 
+  const handleDownloadCSVTemplate = () => {
+    const csvContent = dataService.generateStudentCSVTemplate();
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'sust_students_import_template.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Sample CSV Template downloaded.");
+  };
+
+  const handleUploadCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const res = dataService.importStudentsFromCSV(text);
+      if (res.successCount > 0) {
+        loadAllData();
+        showToast(`Successfully imported ${res.successCount} student(s) into batches!`);
+      } else {
+        alert("Failed to import CSV: " + (res.errors.join(', ') || "Unknown format"));
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleDeleteStudent = (studentId: string) => {
+    if (confirm("Delete this student record?")) {
+      dataService.deleteStudent(studentId);
+      loadAllData();
+      showToast("Student record removed.");
+    }
+  };
+
   const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -376,6 +416,7 @@ export const AdminPage: React.FC = () => {
         {[
           { key: 'stats', label: 'Department Stats', icon: BarChart },
           { key: 'faculty', label: `Faculty (${faculty.length})`, icon: Users },
+          { key: 'batches', label: `Students & CSV Import (${batches.reduce((acc, b) => acc + b.totalStudents, 0)})`, icon: Layers },
           { key: 'research', label: `Research (${research.length})`, icon: BookOpen },
           { key: 'stories', label: `Success Stories (${stories.length})`, icon: Award },
           { key: 'inquiries', label: `Inquiries (${messages.length})`, icon: MessageSquare },
@@ -638,6 +679,152 @@ export const AdminPage: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: BATCHES & CSV STUDENT IMPORT */}
+      {activeTab === 'batches' && (
+        <div className="space-y-8">
+          {/* CSV Import Banner Card */}
+          <div className="academic-card p-6 md:p-8 bg-academic-bg border border-academic-border">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 pb-3 border-b border-academic-border">
+              <div>
+                <span className="text-xs font-bold text-academic-primary uppercase tracking-widest block">
+                  Bulk Registration
+                </span>
+                <h3 className="font-serif font-bold text-xl text-academic-dark">
+                  Import Students Directly via CSV File
+                </h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleDownloadCSVTemplate}
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 bg-white hover:bg-academic-accent-soft text-academic-dark rounded text-xs font-semibold border border-academic-border transition-colors shadow-xs"
+                >
+                  <Download className="w-4 h-4 text-academic-primary" />
+                  <span>Download Sample CSV</span>
+                </button>
+
+                <label className="inline-flex items-center space-x-1.5 px-4 py-2 bg-academic-primary hover:bg-academic-primary-hover text-white rounded text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors shadow-xs">
+                  <Upload className="w-4 h-4" />
+                  <span>Upload & Import CSV</span>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleUploadCSV}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+
+            <p className="text-xs text-academic-text-muted leading-relaxed">
+              You can collect student information via Google Forms or spreadsheets, export as a <strong>.CSV</strong> file, and upload directly here. The system will automatically map the fields, calculate cohort gender ratios, and populate their directories.
+            </p>
+
+            <div className="mt-4 p-3 bg-white rounded border border-academic-border text-[11px] font-mono text-academic-text-muted overflow-x-auto">
+              <span className="font-bold text-academic-primary font-sans block mb-1">Supported CSV Columns:</span>
+              <code>name, registrationNo, batchSession, email, phone, address, gender, quote, skills</code>
+            </div>
+          </div>
+
+          {/* Current Batch View */}
+          <div className="academic-card p-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6 pb-3 border-b border-academic-border">
+              <div>
+                <h3 className="font-serif font-bold text-lg text-academic-dark">
+                  Batch Roster Management
+                </h3>
+                <p className="text-xs text-academic-text-muted">
+                  View and manage student profiles per academic session.
+                </p>
+              </div>
+
+              <div className="w-full sm:w-56">
+                <select
+                  value={selectedAdminBatch}
+                  onChange={(e) => setSelectedAdminBatch(e.target.value)}
+                  className="w-full px-3 py-2 bg-academic-bg rounded border border-academic-border text-xs font-semibold text-academic-dark focus:outline-none focus:border-academic-primary cursor-pointer"
+                >
+                  {batches.map((b) => (
+                    <option key={b.session} value={b.session}>
+                      Session {b.session} ({b.totalStudents} students)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Students List in Selected Batch */}
+            {(() => {
+              const currentBatch = batches.find(b => b.session === selectedAdminBatch) || batches[0];
+              if (!currentBatch || currentBatch.students.length === 0) {
+                return (
+                  <div className="py-8 text-center text-xs text-academic-text-muted">
+                    No students currently registered in Session {selectedAdminBatch}. Use the CSV import above to upload students in bulk!
+                  </div>
+                );
+              }
+
+              return (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-academic-border text-academic-text-muted uppercase text-[10px] tracking-wider">
+                        <th className="py-2.5 px-3">Student</th>
+                        <th className="py-2.5 px-3">Registration No</th>
+                        <th className="py-2.5 px-3">Gender</th>
+                        <th className="py-2.5 px-3">Contact</th>
+                        <th className="py-2.5 px-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-academic-border/60">
+                      {currentBatch.students.map((st) => (
+                        <tr key={st.id} className="hover:bg-academic-bg/50">
+                          <td className="py-3 px-3">
+                            <div className="flex items-center space-x-2.5">
+                              <img
+                                src={st.avatarUrl}
+                                alt={st.name}
+                                className="w-8 h-8 rounded-full object-cover border border-academic-border"
+                              />
+                              <div>
+                                <p className="font-bold text-academic-dark">{st.name}</p>
+                                <p className="text-[11px] text-academic-text-muted truncate max-w-xs">{st.quote || 'Student'}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 font-mono font-medium text-academic-primary">
+                            {st.registrationNo}
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${
+                              st.gender === 'Female' ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-blue-50 text-blue-700 border border-blue-200'
+                            }`}>
+                              {st.gender}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-[11px] text-academic-text-muted">
+                            <p>{st.email}</p>
+                            <p>{st.phone}</p>
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <button
+                              onClick={() => handleDeleteStudent(st.id)}
+                              className="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition-colors text-xs"
+                              title="Delete student"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

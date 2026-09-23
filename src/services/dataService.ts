@@ -178,6 +178,129 @@ export const dataService = {
     return found;
   },
 
+  generateStudentCSVTemplate(): string {
+    return `name,registrationNo,batchSession,email,phone,address,gender,quote,skills
+Abdullah Al Noman,2024232001,2024-2025,noman.sust24@sust.edu,+880 1712-345678,Akhalia Sylhet,Male,"Understanding society begins with listening to the marginalized","Qualitative Research; Data Analysis; Fieldwork"
+Sumaiya Binte Rahman,2024232002,2024-2025,sumaiya.sust24@sust.edu,+880 1712-345679,Zindabazar Sylhet,Female,"Education is the lever of social mobility","Report Writing; SPSS; Interviewing"`;
+  },
+
+  importStudentsFromCSV(csvText: string): { successCount: number; errors: string[] } {
+    const lines = csvText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const errors: string[] = [];
+    if (lines.length < 2) {
+      return { successCount: 0, errors: ["CSV file is empty or missing data rows."] };
+    }
+
+    // Helper to parse CSV line respecting quotes
+    const parseCSVLine = (line: string): string[] => {
+      const result: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim().replace(/^"|"$/g, ''));
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim().replace(/^"|"$/g, ''));
+      return result;
+    };
+
+    const header = parseCSVLine(lines[0]).map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+    const nameIdx = header.findIndex(h => h.includes('name'));
+    const regIdx = header.findIndex(h => h.includes('reg'));
+    const sessionIdx = header.findIndex(h => h.includes('session') || h.includes('batch'));
+    const emailIdx = header.findIndex(h => h.includes('email'));
+    const phoneIdx = header.findIndex(h => h.includes('phone') || h.includes('mobile'));
+    const addrIdx = header.findIndex(h => h.includes('address') || h.includes('location'));
+    const genderIdx = header.findIndex(h => h.includes('gender'));
+    const quoteIdx = header.findIndex(h => h.includes('quote') || h.includes('motto'));
+    const skillsIdx = header.findIndex(h => h.includes('skill'));
+
+    if (nameIdx === -1 || regIdx === -1) {
+      return { successCount: 0, errors: ["Missing required header columns: 'name' and 'registrationNo'."] };
+    }
+
+    const batches = this.getBatches();
+    let imported = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseCSVLine(lines[i]);
+      if (cols.length < 2 || !cols[nameIdx]) continue;
+
+      const name = cols[nameIdx];
+      const reg = cols[regIdx] || `REG-${Date.now()}-${i}`;
+      const session = (sessionIdx !== -1 && cols[sessionIdx]) ? cols[sessionIdx] : '2024-2025';
+      const email = (emailIdx !== -1 && cols[emailIdx]) ? cols[emailIdx] : `${reg.toLowerCase()}@sust.edu`;
+      const phone = (phoneIdx !== -1 && cols[phoneIdx]) ? cols[phoneIdx] : '+880 1712-000000';
+      const address = (addrIdx !== -1 && cols[addrIdx]) ? cols[addrIdx] : 'SUST Campus, Sylhet';
+      const rawGender = (genderIdx !== -1 && cols[genderIdx]) ? cols[genderIdx].toLowerCase() : 'male';
+      const gender: 'Male' | 'Female' = rawGender.includes('f') ? 'Female' : 'Male';
+      const quote = (quoteIdx !== -1 && cols[quoteIdx]) ? cols[quoteIdx] : 'Understanding Society. Inspiring Change.';
+      const rawSkills = (skillsIdx !== -1 && cols[skillsIdx]) ? cols[skillsIdx] : 'Sociological Research; Fieldwork';
+      const skills = rawSkills.split(/[;,]/).map(s => s.trim()).filter(Boolean);
+
+      let batch = batches.find(b => b.session === session);
+      if (!batch) {
+        batch = {
+          session,
+          totalStudents: 0,
+          maleStudents: 0,
+          femaleStudents: 0,
+          classRepresentative: name,
+          photoUrl: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80',
+          students: []
+        };
+        batches.unshift(batch);
+      }
+
+      // Check if student already exists by reg
+      const existingIdx = batch.students.findIndex(s => s.registrationNo === reg);
+      const studentObj: StudentProfile = {
+        id: `student-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        name,
+        registrationNo: reg,
+        batchSession: session,
+        email,
+        phone,
+        address,
+        gender,
+        quote,
+        aboutMe: `Undergraduate student in the Department of Sociology at SUST (Session ${session}). Interested in sociological inquiry, empirical research, and community engagement.`,
+        avatarUrl: gender === 'Female'
+          ? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80'
+          : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+        education: [
+          { degree: "BSS in Sociology", institute: "Shahjalal University of Science & Technology", session, passingYear: "In Progress", result: "Enrolled" }
+        ],
+        researchWorks: [],
+        skills: skills.length > 0 ? skills : ['Social Theory', 'Fieldwork'],
+        experiences: [],
+        achievements: [],
+        isDemo: false
+      };
+
+      if (existingIdx !== -1) {
+        batch.students[existingIdx] = studentObj;
+      } else {
+        batch.students.push(studentObj);
+      }
+
+      batch.totalStudents = batch.students.length;
+      batch.maleStudents = batch.students.filter(s => s.gender === 'Male').length;
+      batch.femaleStudents = batch.students.filter(s => s.gender === 'Female').length;
+      imported++;
+    }
+
+    this.saveBatches(batches);
+    return { successCount: imported, errors };
+  },
+
   // Research
   getResearch(): ResearchPaper[] {
     try {
