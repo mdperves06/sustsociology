@@ -5,13 +5,25 @@ import {
   StudentProfile,
   ResearchPaper,
   SuccessStory,
-  ContactMessage
+  ContactMessage,
+  AlumniMember,
+  NoticeItem,
+  EventItem,
+  LibraryThesisItem,
+  JobOpportunity,
+  MentorshipBooking,
+  DonationPledge
 } from '../types';
 import { DEPARTMENT_STATS } from '../data/department';
 import { INITIAL_FACULTY } from '../data/faculty';
 import { INITIAL_BATCHES } from '../data/batches';
 import { INITIAL_RESEARCH } from '../data/research';
 import { INITIAL_STORIES } from '../data/stories';
+import { INITIAL_ALUMNI } from '../data/alumni';
+import { INITIAL_NOTICES } from '../data/notices';
+import { INITIAL_EVENTS } from '../data/events';
+import { INITIAL_LIBRARY_THESES } from '../data/library';
+import { INITIAL_JOB_POSTINGS } from '../data/jobPostings';
 
 const STORAGE_KEYS = {
   STATS: 'sust_soc_stats',
@@ -20,7 +32,14 @@ const STORAGE_KEYS = {
   RESEARCH: 'sust_soc_research',
   STORIES: 'sust_soc_stories',
   MESSAGES: 'sust_soc_messages',
-  AUTH_PIN: 'sust_soc_admin_pin'
+  AUTH_PIN: 'sust_soc_admin_pin',
+  ALUMNI: 'sust_soc_alumni',
+  NOTICES: 'sust_soc_notices',
+  EVENTS: 'sust_soc_events',
+  LIBRARY: 'sust_soc_library',
+  JOBS: 'sust_soc_jobs',
+  BOOKINGS: 'sust_soc_mentor_bookings',
+  PLEDGES: 'sust_soc_donation_pledges'
 };
 
 const DEFAULT_ADMIN_PIN = "1992";
@@ -425,6 +444,420 @@ Sumaiya Binte Rahman,2024232002,2024-2025,sumaiya.sust24@sust.edu,+880 1712-3456
     }
   },
 
+  // Alumni Operations
+  getAlumni(): AlumniMember[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.ALUMNI);
+      return stored ? JSON.parse(stored) : INITIAL_ALUMNI;
+    } catch {
+      return INITIAL_ALUMNI;
+    }
+  },
+
+  saveAlumni(list: AlumniMember[]): void {
+    localStorage.setItem(STORAGE_KEYS.ALUMNI, JSON.stringify(list));
+  },
+
+  addAlumni(member: Omit<AlumniMember, 'id'>): AlumniMember {
+    const list = this.getAlumni();
+    const newMember: AlumniMember = {
+      ...member,
+      id: `alum-${Date.now()}`
+    };
+    list.unshift(newMember);
+    this.saveAlumni(list);
+    return newMember;
+  },
+
+  deleteAlumni(id: string): boolean {
+    const list = this.getAlumni();
+    const filtered = list.filter(a => a.id !== id);
+    if (filtered.length === list.length) return false;
+    this.saveAlumni(filtered);
+    return true;
+  },
+
+  // Notices Operations
+  getNotices(): NoticeItem[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.NOTICES);
+      return stored ? JSON.parse(stored) : INITIAL_NOTICES;
+    } catch {
+      return INITIAL_NOTICES;
+    }
+  },
+
+  saveNotices(notices: NoticeItem[]): void {
+    localStorage.setItem(STORAGE_KEYS.NOTICES, JSON.stringify(notices));
+  },
+
+  addNotice(notice: Omit<NoticeItem, 'id'>): NoticeItem {
+    const list = this.getNotices();
+    const newNotice: NoticeItem = {
+      ...notice,
+      id: `not-${Date.now()}`
+    };
+    list.unshift(newNotice);
+    this.saveNotices(list);
+    return newNotice;
+  },
+
+  deleteNotice(id: string): boolean {
+    const list = this.getNotices();
+    const filtered = list.filter(n => n.id !== id);
+    if (filtered.length === list.length) return false;
+    this.saveNotices(filtered);
+    return true;
+  },
+
+  // Events Operations
+  getEvents(): EventItem[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.EVENTS);
+      return stored ? JSON.parse(stored) : INITIAL_EVENTS;
+    } catch {
+      return INITIAL_EVENTS;
+    }
+  },
+
+  saveEvents(events: EventItem[]): void {
+    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+  },
+
+  addEvent(event: Omit<EventItem, 'id' | 'rsvpCount'>): EventItem {
+    const list = this.getEvents();
+    const newEvent: EventItem = {
+      ...event,
+      id: `ev-${Date.now()}`,
+      rsvpCount: 1
+    };
+    list.unshift(newEvent);
+    this.saveEvents(list);
+    return newEvent;
+  },
+
+  rsvpEvent(id: string): boolean {
+    const list = this.getEvents();
+    const event = list.find(e => e.id === id);
+    if (event) {
+      event.rsvpCount += 1;
+      this.saveEvents(list);
+      return true;
+    }
+    return false;
+  },
+
+  // Library & Theses Operations
+  getLibraryTheses(): LibraryThesisItem[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.LIBRARY);
+      return stored ? JSON.parse(stored) : INITIAL_LIBRARY_THESES;
+    } catch {
+      return INITIAL_LIBRARY_THESES;
+    }
+  },
+
+  saveLibraryTheses(theses: LibraryThesisItem[]): void {
+    localStorage.setItem(STORAGE_KEYS.LIBRARY, JSON.stringify(theses));
+  },
+
+  addLibraryThesis(thesis: Omit<LibraryThesisItem, 'id'>): LibraryThesisItem {
+    const list = this.getLibraryTheses();
+    const newItem: LibraryThesisItem = {
+      ...thesis,
+      id: `lib-${Date.now()}`
+    };
+    list.unshift(newItem);
+    this.saveLibraryTheses(list);
+    return newItem;
+  },
+
+  // Jobs & Opportunities
+  getJobs(): JobOpportunity[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.JOBS);
+      return stored ? JSON.parse(stored) : INITIAL_JOB_POSTINGS;
+    } catch {
+      return INITIAL_JOB_POSTINGS;
+    }
+  },
+
+  saveJobs(jobs: JobOpportunity[]): void {
+    localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+  },
+
+  addJob(job: Omit<JobOpportunity, 'id'>): JobOpportunity {
+    const list = this.getJobs();
+    const newJob: JobOpportunity = {
+      ...job,
+      id: `job-${Date.now()}`
+    };
+    list.unshift(newJob);
+    this.saveJobs(list);
+    return newJob;
+  },
+
+  deleteJob(id: string): boolean {
+    const list = this.getJobs();
+    const filtered = list.filter(j => j.id !== id);
+    if (filtered.length === list.length) return false;
+    this.saveJobs(filtered);
+    return true;
+  },
+
+  // Mentorship Bookings
+  getMentorshipBookings(): MentorshipBooking[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.BOOKINGS);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  createMentorshipBooking(booking: Omit<MentorshipBooking, 'id' | 'createdAt' | 'status'>): MentorshipBooking {
+    const list = this.getMentorshipBookings();
+    const newBooking: MentorshipBooking = {
+      ...booking,
+      id: `book-${Date.now()}`,
+      status: 'Pending',
+      createdAt: new Date().toISOString()
+    };
+    list.unshift(newBooking);
+    localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(list));
+    return newBooking;
+  },
+
+  // Donation Pledges & Giving Fund
+  getDonationPledges(): DonationPledge[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.PLEDGES);
+      return stored ? JSON.parse(stored) : [
+        {
+          id: 'pledge-01',
+          donorName: 'Dr. A. H. M. Belal Hossain',
+          donorBatch: '1992-1993',
+          donorEmail: 'belal.hossain@mopa.gov.bd',
+          amount: 50000,
+          currency: 'BDT',
+          cause: 'Needy Student Scholarship',
+          paymentMethod: 'bKash',
+          transactionRef: 'BK-8829141',
+          pledgedAt: '2026-08-15T10:30:00Z',
+          message: 'For undergraduate scholars needing tuition and residential support.'
+        },
+        {
+          id: 'pledge-02',
+          donorName: 'Syed Kamrul Hasan',
+          donorBatch: '1994-1995',
+          donorEmail: 'kamrul.hasan@sylhetcci.org',
+          amount: 100000,
+          currency: 'BDT',
+          cause: 'Silver Jubilee Reunion',
+          paymentMethod: 'Bank Wire/SWIFT',
+          transactionRef: 'SW-998811',
+          pledgedAt: '2026-09-01T14:20:00Z',
+          message: 'Department alumni fellowship sponsorship.'
+        },
+        {
+          id: 'pledge-03',
+          donorName: 'Salman F. Rahman',
+          donorBatch: '2015-2016',
+          donorEmail: 'salman.ux@google.com',
+          amount: 75000,
+          currency: 'BDT',
+          cause: 'Seminar Library Fund',
+          paymentMethod: 'Bank Wire/SWIFT',
+          transactionRef: 'SW-223415',
+          pledgedAt: '2026-09-10T16:45:00Z',
+          message: 'Digitization and journal subscriptions for Sociology Seminar Library.'
+        }
+      ];
+    } catch {
+      return [];
+    }
+  },
+
+  submitDonationPledge(pledge: Omit<DonationPledge, 'id' | 'pledgedAt'>): DonationPledge {
+    const list = this.getDonationPledges();
+    const newPledge: DonationPledge = {
+      ...pledge,
+      id: `pledge-${Date.now()}`,
+      pledgedAt: new Date().toISOString()
+    };
+    list.unshift(newPledge);
+    localStorage.setItem(STORAGE_KEYS.PLEDGES, JSON.stringify(list));
+    return newPledge;
+  },
+
+  // CSV Exporters & Importers
+  exportStudentsCSV(batchSession?: string): string {
+    const batches = this.getBatches();
+    const studentsToExport: StudentProfile[] = [];
+    batches.forEach(b => {
+      if (!batchSession || b.session === batchSession) {
+        studentsToExport.push(...b.students);
+      }
+    });
+
+    const header = ['name', 'registrationNo', 'batchSession', 'email', 'phone', 'address', 'gender', 'quote', 'skills'];
+    const rows = studentsToExport.map(s => [
+      `"${s.name.replace(/"/g, '""')}"`,
+      `"${s.registrationNo}"`,
+      `"${s.batchSession}"`,
+      `"${s.email}"`,
+      `"${s.phone}"`,
+      `"${s.address.replace(/"/g, '""')}"`,
+      `"${s.gender}"`,
+      `"${(s.quote || '').replace(/"/g, '""')}"`,
+      `"${s.skills.join('; ')}"`
+    ].join(','));
+
+    return [header.join(','), ...rows].join('\n');
+  },
+
+  exportAlumniCSV(): string {
+    const alumni = this.getAlumni();
+    const header = ['name', 'registrationNo', 'batchSession', 'graduationYear', 'degree', 'currentRole', 'organization', 'industry', 'country', 'city', 'email', 'phone', 'bloodGroup', 'chapter', 'openToMentorship'];
+    const rows = alumni.map(a => [
+      `"${a.name.replace(/"/g, '""')}"`,
+      `"${a.registrationNo || ''}"`,
+      `"${a.batchSession}"`,
+      a.graduationYear,
+      `"${a.degree}"`,
+      `"${a.currentRole.replace(/"/g, '""')}"`,
+      `"${a.organization.replace(/"/g, '""')}"`,
+      `"${a.industry}"`,
+      `"${a.country}"`,
+      `"${a.city}"`,
+      `"${a.email}"`,
+      `"${a.phone || ''}"`,
+      `"${a.bloodGroup || 'O+'}"`,
+      `"${a.chapter || 'Sylhet'}"`,
+      a.openToMentorship ? 'Yes' : 'No'
+    ].join(','));
+
+    return [header.join(','), ...rows].join('\n');
+  },
+
+  generateAlumniCSVTemplate(): string {
+    const header = ['name', 'registrationNo', 'batchSession', 'graduationYear', 'degree', 'currentRole', 'organization', 'industry', 'country', 'city', 'email', 'phone', 'bloodGroup', 'chapter', 'openToMentorship'];
+    const samples = [
+      ['"Khandaker Mofazzal Hossain"', '"2004234011"', '"2004-2005"', '2009', '"MSS"', '"Director of Programs"', '"Save the Children"', '"NGO & Multilateral"', '"Bangladesh"', '"Sylhet"', '"khandaker.alumni@sust.edu"', '"+8801712000000"', '"A+"', '"Sylhet"', '"Yes"'],
+      ['"Tahmina Begum"', '"2007234022"', '"2007-2008"', '2012', '"BSS"', '"Assistant Commissioner (Tax)"', '"National Board of Revenue"', '"Civil Service & Govt"', '"Bangladesh"', '"Dhaka"', '"tahmina.nbr@gov.bd"', '"+8801819000000"', '"B+"', '"Dhaka"', '"Yes"'],
+      ['"Arifur Rahman"', '"2012234033"', '"2012-2013"', '2017', '"MSS"', '"Senior UX Lead"', '"Careem / Uber Middle East"', '"Tech & Data"', '"United Arab Emirates"', '"Dubai"', '"arif.ux@careem.com"', '"+971501234567"', '"O+"', '"Other International"', '"No"']
+    ];
+
+    return [header.join(','), ...samples.map(s => s.join(','))].join('\n');
+  },
+
+  importAlumniFromCSV(csvText: string): { imported: number; errors: string[] } {
+    const lines = csvText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length <= 1) {
+      return { imported: 0, errors: ['CSV file is empty or contains only header row.'] };
+    }
+
+    const currentAlumni = this.getAlumni();
+    let imported = 0;
+    const errors: string[] = [];
+
+    const parseLine = (line: string): string[] => {
+      const result: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"' || char === "'") {
+          if (inQuotes && line[i + 1] === char) {
+            current += char;
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    };
+
+    const header = parseLine(lines[0]).map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+    const getIndex = (name: string) => header.findIndex(h => h.includes(name));
+
+    const nameIdx = getIndex('name');
+    const batchIdx = getIndex('batch');
+    const gradIdx = getIndex('grad');
+    const degreeIdx = getIndex('degree');
+    const roleIdx = getIndex('role');
+    const orgIdx = getIndex('org');
+    const industryIdx = getIndex('industry');
+    const countryIdx = getIndex('country');
+    const cityIdx = getIndex('city');
+    const emailIdx = getIndex('email');
+    const phoneIdx = getIndex('phone');
+    const bloodIdx = getIndex('blood');
+    const mentorIdx = getIndex('mentor');
+    const regIdx = getIndex('reg');
+
+    for (let i = 1; i < lines.length; i++) {
+      try {
+        const cols = parseLine(lines[i]);
+        const name = nameIdx !== -1 ? cols[nameIdx] : cols[0];
+        const email = emailIdx !== -1 ? cols[emailIdx] : (cols[9] || '');
+
+        if (!name || name.length < 2) {
+          errors.push(`Row ${i + 1}: Skipped - missing alumnus name.`);
+          continue;
+        }
+
+        const batchSession = batchIdx !== -1 && cols[batchIdx] ? cols[batchIdx] : '2016-2017';
+        const graduationYear = gradIdx !== -1 && !isNaN(Number(cols[gradIdx])) ? Number(cols[gradIdx]) : 2021;
+        const currentRole = roleIdx !== -1 && cols[roleIdx] ? cols[roleIdx] : 'Alumnus / Professional';
+        const organization = orgIdx !== -1 && cols[orgIdx] ? cols[orgIdx] : 'Professional Organization';
+        const bloodGroup = bloodIdx !== -1 && cols[bloodIdx] ? (cols[bloodIdx] as any) : 'B+';
+        const openToMentorship = mentorIdx !== -1 ? (cols[mentorIdx].toLowerCase().includes('y') || cols[mentorIdx] === 'true') : true;
+
+        const newAlumnus: AlumniMember = {
+          id: `alum-csv-${Date.now()}-${i}`,
+          name: name.replace(/^["']|["']$/g, ''),
+          batchSession,
+          graduationYear,
+          degree: (degreeIdx !== -1 && cols[degreeIdx] ? cols[degreeIdx] as any : 'BSS'),
+          registrationNo: regIdx !== -1 ? cols[regIdx] : undefined,
+          currentRole,
+          organization,
+          industry: (industryIdx !== -1 && cols[industryIdx] ? cols[industryIdx] as any : 'Corporate'),
+          country: countryIdx !== -1 && cols[countryIdx] ? cols[countryIdx] : 'Bangladesh',
+          city: cityIdx !== -1 && cols[cityIdx] ? cols[cityIdx] : 'Sylhet',
+          email: email || `alumni.${Date.now()}.${i}@sust.edu`,
+          phone: phoneIdx !== -1 ? cols[phoneIdx] : undefined,
+          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+          openToMentorship,
+          mentorshipTopics: ['Higher Studies', 'Career Consultation', 'Alumni Fellowship'],
+          bio: 'Proud alumnus of the Department of Sociology, SUST.',
+          bloodGroup,
+          isAvailableForBloodDonation: true,
+          approved: true
+        };
+
+        currentAlumni.unshift(newAlumnus);
+        imported++;
+      } catch (err: any) {
+        errors.push(`Row ${i + 1}: ${err.message || 'Formatting error'}`);
+      }
+    }
+
+    if (imported > 0) {
+      this.saveAlumni(currentAlumni);
+    }
+
+    return { imported, errors };
+  },
+
   // Admin Security
   verifyAdminPin(enteredPin: string): boolean {
     const storedPin = localStorage.getItem(STORAGE_KEYS.AUTH_PIN) || DEFAULT_ADMIN_PIN;
@@ -442,6 +875,13 @@ Sumaiya Binte Rahman,2024232002,2024-2025,sumaiya.sust24@sust.edu,+880 1712-3456
     localStorage.removeItem(STORAGE_KEYS.BATCHES);
     localStorage.removeItem(STORAGE_KEYS.RESEARCH);
     localStorage.removeItem(STORAGE_KEYS.STORIES);
+    localStorage.removeItem(STORAGE_KEYS.ALUMNI);
+    localStorage.removeItem(STORAGE_KEYS.NOTICES);
+    localStorage.removeItem(STORAGE_KEYS.EVENTS);
+    localStorage.removeItem(STORAGE_KEYS.LIBRARY);
+    localStorage.removeItem(STORAGE_KEYS.JOBS);
+    localStorage.removeItem(STORAGE_KEYS.BOOKINGS);
+    localStorage.removeItem(STORAGE_KEYS.PLEDGES);
   },
 
   exportAllData(): string {
@@ -451,6 +891,12 @@ Sumaiya Binte Rahman,2024232002,2024-2025,sumaiya.sust24@sust.edu,+880 1712-3456
       batches: this.getBatches(),
       research: this.getResearch(),
       stories: this.getStories(),
+      alumni: this.getAlumni(),
+      notices: this.getNotices(),
+      events: this.getEvents(),
+      library: this.getLibraryTheses(),
+      jobs: this.getJobs(),
+      pledges: this.getDonationPledges(),
       exportedAt: new Date().toISOString()
     }, null, 2);
   },
@@ -463,9 +909,16 @@ Sumaiya Binte Rahman,2024232002,2024-2025,sumaiya.sust24@sust.edu,+880 1712-3456
       if (data.batches) this.saveBatches(data.batches);
       if (data.research) this.saveResearch(data.research);
       if (data.stories) this.saveStories(data.stories);
+      if (data.alumni) this.saveAlumni(data.alumni);
+      if (data.notices) this.saveNotices(data.notices);
+      if (data.events) this.saveEvents(data.events);
+      if (data.library) this.saveLibraryTheses(data.library);
+      if (data.jobs) this.saveJobs(data.jobs);
       return true;
     } catch {
       return false;
     }
   }
 };
+
+

@@ -10,7 +10,9 @@ import {
   Briefcase,
   GraduationCap,
   Sparkles,
-  Mail
+  Mail,
+  Library,
+  Bell
 } from 'lucide-react';
 
 interface SidebarNavProps {
@@ -29,9 +31,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ className = '', activeSt
     { label: 'Faculty', path: '/faculty', icon: Users },
     { label: 'Batch', path: '/batch', icon: Layers },
     { label: 'Research', path: '/research', icon: FileText },
+    { label: 'Seminar Library', path: '/library', icon: Library },
     { label: 'Student Success Story', path: '/student-success-story', icon: Award },
     { label: 'Jobs In Sociology', path: '/jobs', icon: Briefcase },
     { label: 'Alumni Association', path: '/alumni', icon: GraduationCap },
+    { label: 'Notices & Events', path: '/notices', icon: Bell },
     { label: 'Sociology Society', path: '/sociology-society', icon: Sparkles },
     { label: 'Contact', path: '/contact', icon: Mail },
   ];

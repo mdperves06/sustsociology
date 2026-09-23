@@ -31,9 +31,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
     { label: 'Faculty', path: '/faculty' },
     { label: 'Batch', path: '/batch' },
     { label: 'Research', path: '/research' },
+    { label: 'Library', path: '/library' },
     { label: 'Success Story', path: '/student-success-story' },
     { label: 'Jobs', path: '/jobs' },
     { label: 'Alumni', path: '/alumni' },
+    { label: 'Notices', path: '/notices' },
     { label: 'Society', path: '/sociology-society' },
     { label: 'Contact', path: '/contact' },
   ];

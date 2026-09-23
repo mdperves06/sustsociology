@@ -148,3 +148,120 @@ export interface ContactMessage {
   submittedAt: string;
   read: boolean;
 }
+
+export type IndustryType =
+  | 'Academia & Research'
+  | 'Civil Service & Govt'
+  | 'Tech & Data'
+  | 'Banking & Finance'
+  | 'NGO & Multilateral'
+  | 'Media & Journalism'
+  | 'Corporate';
+
+export interface AlumniMember {
+  id: string;
+  name: string;
+  batchSession: string; // e.g. "1996-1997"
+  graduationYear: number;
+  degree: 'BSS' | 'MSS' | 'M.Phil.' | 'Ph.D.';
+  currentRole: string;
+  organization: string;
+  industry: IndustryType;
+  country: string;
+  city: string;
+  email: string;
+  phone?: string;
+  linkedIn?: string;
+  avatarUrl: string;
+  openToMentorship: boolean;
+  mentorshipTopics?: string[];
+  bio?: string;
+  approved?: boolean;
+  registrationNo?: string;
+  bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'O+' | 'O-' | 'AB+' | 'AB-';
+  isAvailableForBloodDonation?: boolean;
+  chapter?: 'Sylhet' | 'Dhaka' | 'Chittagong' | 'North America' | 'Europe & UK' | 'Australia' | 'Other International';
+}
+
+export interface NoticeItem {
+  id: string;
+  title: string;
+  category: 'Academic' | 'Exam & Results' | 'GSC & Research' | 'Event' | 'Scholarship';
+  publishedDate: string;
+  urgent: boolean;
+  fileUrl?: string;
+  description: string;
+}
+
+export interface EventItem {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  venue: string;
+  category: 'Reunion' | 'Conference' | 'Webinar' | 'Workshop' | 'Cultural';
+  description: string;
+  speakers?: string[];
+  rsvpCount: number;
+  featured?: boolean;
+}
+
+export interface LibraryThesisItem {
+  id: string;
+  title: string;
+  author: string;
+  type: 'BSS Monograph' | 'MSS Thesis' | 'M.Phil Dissertation' | 'Ph.D. Dissertation';
+  year: string;
+  supervisor: string;
+  keywords: string[];
+  callNumber: string;
+  abstract?: string;
+}
+
+export interface JobOpportunity {
+  id: string;
+  title: string;
+  organization: string;
+  type: 'Full-time' | 'Part-time' | 'Internship' | 'Research Fellowship' | 'Contract';
+  location: string;
+  deadline: string;
+  postedByAlumniName?: string;
+  postedByBatch?: string;
+  contactEmail: string;
+  applicationLink?: string;
+  description: string;
+  requirements: string[];
+  salaryOrStipend?: string;
+  category: 'NGO & Multilateral' | 'Academia & Research' | 'Corporate & HR' | 'Tech & Data' | 'Govt & Civil Service';
+  featured?: boolean;
+}
+
+export interface MentorshipBooking {
+  id: string;
+  studentName: string;
+  studentEmail: string;
+  studentBatch: string;
+  alumniId: string;
+  alumniName: string;
+  topic: string;
+  preferredMode: 'Zoom' | 'Google Meet' | 'Phone Call' | 'In-person (SUST)';
+  message: string;
+  status: 'Pending' | 'Confirmed' | 'Completed';
+  createdAt: string;
+}
+
+export interface DonationPledge {
+  id: string;
+  donorName: string;
+  donorBatch?: string;
+  donorEmail: string;
+  amount: number;
+  currency: 'BDT' | 'USD' | 'GBP';
+  cause: 'Needy Student Scholarship' | 'Emergency Medical Aid' | 'Seminar Library Fund' | 'Silver Jubilee Reunion';
+  paymentMethod: 'bKash' | 'Nagad' | 'Rocket' | 'Bank Wire/SWIFT';
+  transactionRef?: string;
+  pledgedAt: string;
+  message?: string;
+}
+
+

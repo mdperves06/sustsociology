@@ -38,17 +38,19 @@ This application translates the institutional heritage, academic rigor, and layo
 | `/about` | **About Department** | Full chronicle from 1992-93 founding, degrees under Graduate Studies Committee (GSC), Head of Department welcome address, and facility profiles. |
 | `/faculty` | **Faculty Directory** | Filterable by academic ranks (Professors, Associate Professors, Assistant Professors, Lecturers) with live keyword search. |
 | `/faculty/:id` | **Faculty Profile** | Detailed academic dossiers with bio, qualifications timeline, research interests, courses taught, and publications. |
-| `/batch` | **Batch Directory** | Session selector (e.g., 2024-2025, 2023-2024), gender ratio counters, cohort photos, and student directory cards. |
-| `/batch/:batchId/student/:studentId` | **Student Profile** | Pixel-accurate reproduction of PDF Page 2 (Kazi Borhan Uddin Rudro) with degrees, skills, research, experience, and achievements. |
-| `/research` | **Research Portal** | Filterable by thematic tags (`environmental`, `river geomorphology`, `socioeconomic impacts`, `gravel mining`) with instant citation generator (APA, Chicago, Harvard, BibTeX). |
+| `/batch` | **Batch Directory** | Session selector (e.g., 2024-2025, 2023-2024), gender ratio counters, cohort photos, and student directory cards with bulk CSV import. |
+| `/batch/:batchId/student/:studentId` | **Student Profile** | Pixel-accurate reproduction of PDF Page 2 (Kazi Borhan Uddin Rudro) with printable academic CV trigger, degrees, skills, research, and experience. |
+| `/alumni` | **Alumni Association Portal** | Complete community suite: Global Directory, Emergency Blood Lifeline, Alumni Self-Registration, 1-on-1 Mentorship Booking, Giving Fund & Virtual Alumni ID Card. |
+| `/jobs` | **Jobs & Career Board** | Dual view: Live Alumni Jobs & Internships board with direct application modal & opportunity posting form, plus 18 global sector mappings from PDF Page 6. |
+| `/notices` & `/events` | **Notice Board & Events** | Department circulars with urgent alerts, reunion RSVPs, and syllabus/curriculum download center. |
+| `/library` | **Library & Thesis Archive** | Search over 30 years of undergraduate monographs, graduate dissertations, and doctoral theses in Academic Building D. |
+| `/research` | **Research Portal** | Filterable by thematic tags (`environmental`, `river geomorphology`, `gravel mining`) with instant citation generator (APA, Chicago, Harvard, BibTeX). |
 | `/research/:id` | **Publication Reader** | Full abstract, methodology, authors, affiliations, DOI, and PDF download handler. |
 | `/student-success-story` | **Success Stories** | Spotlighting student and alumni breakthroughs (e.g. UN Biosecurity Fellowship, Asian Youngest 100 Scientist, Google UX, World Bank). |
 | `/student-success-story/:id` | **Story Reader** | Long-form editorial narrative with pull quotes and career milestones. |
-| `/jobs` | **Jobs In Sociology** | *"Understand People. Solve Problems. Change the World."* Maps 18 organizations (Google, Apple, Microsoft, UN, World Bank, CNN, BBC, NVIDIA, etc.) to exact sociological roles. |
-| `/alumni` | **Alumni Association** | Regional chapters (Sylhet, Dhaka, UK, North America), historical alumni counters, and mentorship signup form. |
 | `/sociology-society` | **Sociology Society** | Department club, annual sociology summits, *Samajchitra* wall magazine, debate fest, and executive committee. |
 | `/contact` | **Contact & Map** | Official office hours, validated inquiry form with local persistence, and interactive SUST campus map embed. |
-| `/admin` | **Admin CMS** | PIN-protected dashboard (`1992`) providing full CRUD management for stats, faculty, batches, research, and stories. |
+| `/admin` | **Admin CMS** | PIN-protected dashboard (`1992`) with full control over stats, faculty, bulk CSV student/alumni imports, notices, jobs, and backup restore. |
 
 ---
 

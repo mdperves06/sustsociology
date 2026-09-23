@@ -15,7 +15,8 @@ import {
   Calendar,
   Layers,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  Printer
 } from 'lucide-react';
 import { SidebarNav } from '../components/layout/SidebarNav';
 import { AcademicNotice } from '../components/common/AcademicNotice';
@@ -43,8 +44,8 @@ export const StudentProfilePage: React.FC = () => {
         <SidebarNav activeStudentId={student.id} />
 
         <main className="flex-1 min-w-0">
-          {/* Breadcrumb / Back button */}
-          <div className="flex justify-between items-center mb-6">
+          {/* Breadcrumb / Back button & Print Action */}
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6">
             <button
               onClick={() => navigate(-1)}
               className="inline-flex items-center space-x-1.5 text-xs font-semibold text-academic-primary hover:text-academic-primary-hover"
@@ -52,9 +53,19 @@ export const StudentProfilePage: React.FC = () => {
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Batch Directory</span>
             </button>
-            <span className="text-xs text-academic-text-muted">
-              Batch Session: <strong className="text-academic-dark">{student.batchSession}</strong>
-            </span>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => window.print()}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-academic-bg text-academic-dark rounded text-xs font-semibold border border-academic-border shadow-xs transition-colors"
+                title="Print or Save Profile as PDF"
+              >
+                <Printer className="w-3.5 h-3.5 text-academic-primary" />
+                <span>Print Academic CV</span>
+              </button>
+              <span className="text-xs text-academic-text-muted">
+                Batch Session: <strong className="text-academic-dark">{student.batchSession}</strong>
+              </span>
+            </div>
           </div>
 
           {/* Top Profile Card matching PDF Page 2 */}

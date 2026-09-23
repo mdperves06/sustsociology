@@ -16,7 +16,14 @@ import {
   Layers,
   Award,
   BarChart,
-  MessageSquare
+  MessageSquare,
+  GraduationCap,
+  Bell,
+  Briefcase,
+  Heart,
+  Droplet,
+  FileText,
+  ExternalLink
 } from 'lucide-react';
 import { SectionHeader } from '../components/common/SectionHeader';
 import { dataService } from '../services/dataService';
@@ -27,7 +34,11 @@ import {
   ResearchPaper,
   SuccessStory,
   ContactMessage,
-  Designation
+  Designation,
+  AlumniMember,
+  NoticeItem,
+  JobOpportunity,
+  DonationPledge
 } from '../types';
 
 export const AdminPage: React.FC = () => {
@@ -36,7 +47,9 @@ export const AdminPage: React.FC = () => {
   const [authError, setAuthError] = useState(false);
 
   // Active Admin Sub-tab
-  const [activeTab, setActiveTab] = useState<'stats' | 'faculty' | 'batches' | 'research' | 'stories' | 'inquiries' | 'backup'>('stats');
+  const [activeTab, setActiveTab] = useState<
+    'stats' | 'faculty' | 'batches' | 'alumni' | 'notices' | 'jobs' | 'donations' | 'research' | 'stories' | 'inquiries' | 'backup'
+  >('stats');
 
   // Local State
   const [stats, setStats] = useState<DepartmentStats>(dataService.getStats());
@@ -46,7 +59,40 @@ export const AdminPage: React.FC = () => {
   const [research, setResearch] = useState<ResearchPaper[]>([]);
   const [stories, setStories] = useState<SuccessStory[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [alumni, setAlumni] = useState<AlumniMember[]>([]);
+  const [notices, setNotices] = useState<NoticeItem[]>([]);
+  const [jobs, setJobs] = useState<JobOpportunity[]>([]);
+  const [pledges, setPledges] = useState<DonationPledge[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Form states for alumni
+  const [newAlumnus, setNewAlumnus] = useState<Partial<AlumniMember>>({
+    name: '',
+    batchSession: '2016-2017',
+    graduationYear: 2021,
+    degree: 'BSS',
+    registrationNo: '',
+    currentRole: '',
+    organization: '',
+    industry: 'Civil Service & Govt',
+    country: 'Bangladesh',
+    city: 'Sylhet',
+    email: '',
+    phone: '',
+    bloodGroup: 'B+',
+    chapter: 'Sylhet',
+    openToMentorship: true,
+    isAvailableForBloodDonation: true
+  });
+
+  // Form states for notices
+  const [newNotice, setNewNotice] = useState<Partial<NoticeItem>>({
+    title: '',
+    category: 'Academic',
+    urgent: false,
+    description: '',
+    publishedDate: new Date().toISOString().split('T')[0]
+  });
 
   // Form states for creating new items
   const [newFaculty, setNewFaculty] = useState<Partial<FacultyMember>>({
@@ -108,6 +154,151 @@ export const AdminPage: React.FC = () => {
     setResearch(dataService.getResearch());
     setStories(dataService.getStories());
     setMessages(dataService.getContactMessages());
+    setAlumni(dataService.getAlumni());
+    setNotices(dataService.getNotices());
+    setJobs(dataService.getJobs());
+    setPledges(dataService.getDonationPledges());
+  };
+
+  // Alumni Handlers
+  const handleDownloadAlumniCSVTemplate = () => {
+    const csvContent = dataService.generateAlumniCSVTemplate();
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'sust_sociology_alumni_import_template.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Alumni CSV Template downloaded.");
+  };
+
+  const handleUploadAlumniCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const res = dataService.importAlumniFromCSV(text);
+      if (res.imported > 0) {
+        loadAllData();
+        showToast(`Successfully imported ${res.imported} alumni record(s)!`);
+      } else {
+        alert("Failed to import alumni: " + (res.errors.join(', ') || "Unknown error"));
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleExportAlumniCSV = () => {
+    const csvContent = dataService.exportAlumniCSV();
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `sust_sociology_alumni_directory_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Alumni directory exported as CSV.");
+  };
+
+  const handleAddAlumnus = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAlumnus.name || !newAlumnus.email) return;
+
+    dataService.addAlumni({
+      name: newAlumnus.name,
+      batchSession: newAlumnus.batchSession || '2016-2017',
+      graduationYear: Number(newAlumnus.graduationYear) || 2021,
+      degree: (newAlumnus.degree as any) || 'BSS',
+      registrationNo: newAlumnus.registrationNo || `SOC-${Date.now().toString().slice(-4)}`,
+      currentRole: newAlumnus.currentRole || 'Professional',
+      organization: newAlumnus.organization || 'Organization',
+      industry: (newAlumnus.industry as any) || 'Corporate',
+      country: newAlumnus.country || 'Bangladesh',
+      city: newAlumnus.city || 'Sylhet',
+      email: newAlumnus.email,
+      phone: newAlumnus.phone,
+      bloodGroup: newAlumnus.bloodGroup || 'B+',
+      chapter: (newAlumnus.chapter as any) || 'Sylhet',
+      openToMentorship: newAlumnus.openToMentorship ?? true,
+      isAvailableForBloodDonation: newAlumnus.isAvailableForBloodDonation ?? true,
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      approved: true
+    });
+
+    loadAllData();
+    showToast("Alumnus profile added.");
+    setNewAlumnus({
+      name: '',
+      batchSession: '2016-2017',
+      graduationYear: 2021,
+      degree: 'BSS',
+      registrationNo: '',
+      currentRole: '',
+      organization: '',
+      industry: 'Civil Service & Govt',
+      country: 'Bangladesh',
+      city: 'Sylhet',
+      email: '',
+      phone: '',
+      bloodGroup: 'B+',
+      chapter: 'Sylhet',
+      openToMentorship: true,
+      isAvailableForBloodDonation: true
+    });
+  };
+
+  const handleDeleteAlumnus = (id: string) => {
+    if (confirm("Delete this alumnus record?")) {
+      dataService.deleteAlumni(id);
+      loadAllData();
+      showToast("Alumnus record removed.");
+    }
+  };
+
+  // Notice Handlers
+  const handleAddNotice = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNotice.title) return;
+
+    dataService.addNotice({
+      title: newNotice.title,
+      category: (newNotice.category as any) || 'Academic',
+      urgent: !!newNotice.urgent,
+      description: newNotice.description || 'Institutional circular from the Department of Sociology, SUST.',
+      publishedDate: newNotice.publishedDate || new Date().toISOString().split('T')[0]
+    });
+
+    loadAllData();
+    showToast("Official notice published.");
+    setNewNotice({
+      title: '',
+      category: 'Academic',
+      urgent: false,
+      description: '',
+      publishedDate: new Date().toISOString().split('T')[0]
+    });
+  };
+
+  const handleDeleteNotice = (id: string) => {
+    if (confirm("Delete this notice?")) {
+      dataService.deleteNotice(id);
+      loadAllData();
+      showToast("Notice removed.");
+    }
+  };
+
+  // Job Handlers
+  const handleDeleteJob = (id: string) => {
+    if (confirm("Delete this job opening?")) {
+      dataService.deleteJob(id);
+      loadAllData();
+      showToast("Job opportunity removed.");
+    }
   };
 
   const showToast = (msg: string) => {
@@ -416,7 +607,11 @@ export const AdminPage: React.FC = () => {
         {[
           { key: 'stats', label: 'Department Stats', icon: BarChart },
           { key: 'faculty', label: `Faculty (${faculty.length})`, icon: Users },
-          { key: 'batches', label: `Students & CSV Import (${batches.reduce((acc, b) => acc + b.totalStudents, 0)})`, icon: Layers },
+          { key: 'batches', label: `Students & CSV (${batches.reduce((acc, b) => acc + b.totalStudents, 0)})`, icon: Layers },
+          { key: 'alumni', label: `Alumni & Bulk CSV (${alumni.length})`, icon: GraduationCap },
+          { key: 'notices', label: `Notices (${notices.length})`, icon: Bell },
+          { key: 'jobs', label: `Job Board (${jobs.length})`, icon: Briefcase },
+          { key: 'donations', label: `Giving Fund (${pledges.length})`, icon: Heart },
           { key: 'research', label: `Research (${research.length})`, icon: BookOpen },
           { key: 'stories', label: `Success Stories (${stories.length})`, icon: Award },
           { key: 'inquiries', label: `Inquiries (${messages.length})`, icon: MessageSquare },
@@ -825,6 +1020,516 @@ export const AdminPage: React.FC = () => {
                 </div>
               );
             })()}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: ALUMNI MANAGEMENT & BULK CSV */}
+      {activeTab === 'alumni' && (
+        <div className="space-y-8">
+          {/* CSV Bulk Operations Card */}
+          <div className="academic-card p-6 md:p-8 bg-academic-bg border-l-4 border-academic-primary">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+              <div>
+                <h3 className="font-serif font-bold text-lg text-academic-dark">
+                  Direct Bulk CSV Alumni Import & Roster Sync
+                </h3>
+                <p className="text-xs text-academic-text-muted mt-0.5">
+                  Upload complete batch rosters containing dozens or hundreds of graduates at once.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={handleDownloadAlumniCSVTemplate}
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-academic-surface border border-academic-border rounded text-xs font-semibold text-academic-dark transition-colors shadow-xs"
+                >
+                  <Download className="w-3.5 h-3.5 text-academic-primary" />
+                  <span>Download CSV Template</span>
+                </button>
+
+                <label className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-academic-primary hover:bg-academic-primary-dark text-white rounded text-xs font-semibold transition-colors cursor-pointer shadow-xs">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload Alumni CSV</span>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleUploadAlumniCSV}
+                    className="hidden"
+                  />
+                </label>
+
+                <button
+                  onClick={handleExportAlumniCSV}
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-academic-bg border border-academic-border rounded text-xs font-semibold text-academic-dark transition-colors shadow-xs"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Export All CSV</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3 bg-white rounded border border-academic-border/70 text-[11px] text-academic-dark/90 font-mono">
+              <span className="font-bold text-academic-primary">Required CSV Headers: </span>
+              name, registrationNo, batchSession, graduationYear, degree, currentRole, organization, industry, country, city, email, phone, bloodGroup, chapter, openToMentorship
+            </div>
+          </div>
+
+          {/* Add New Alumnus Form */}
+          <div className="academic-card p-6 md:p-8 bg-academic-bg border border-academic-border">
+            <h3 className="font-serif font-bold text-lg text-academic-dark mb-4 pb-2 border-b border-academic-border flex items-center space-x-2">
+              <Plus className="w-5 h-5 text-academic-primary" />
+              <span>Add Single Alumnus Profile</span>
+            </h3>
+
+            <form onSubmit={handleAddAlumnus} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newAlumnus.name}
+                    onChange={(e) => setNewAlumnus({ ...newAlumnus, name: e.target.value })}
+                    placeholder="e.g. Dr. A. H. M. Belal Hossain"
+                    className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                    Registration No
+                  </label>
+                  <input
+                    type="text"
+                    value={newAlumnus.registrationNo}
+                    onChange={(e) => setNewAlumnus({ ...newAlumnus, registrationNo: e.target.value })}
+                    placeholder="e.g. 1992234001"
+                    className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                    Batch Session *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newAlumnus.batchSession}
+                    onChange={(e) => setNewAlumnus({ ...newAlumnus, batchSession: e.target.value })}
+                    placeholder="e.g. 1992-1993"
+                    className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                    Designation / Role
+                  </label>
+                  <input
+                    type="text"
+                    value={newAlumnus.currentRole}
+                    onChange={(e) => setNewAlumnus({ ...newAlumnus, currentRole: e.target.value })}
+                    placeholder="e.g. Joint Secretary"
+                    className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                    Organization
+                  </label>
+                  <input
+                    type="text"
+                    value={newAlumnus.organization}
+                    onChange={(e) => setNewAlumnus({ ...newAlumnus, organization: e.target.value })}
+                    placeholder="e.g. Ministry of Public Administration"
+                    className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                    Blood Group
+                  </label>
+                  <select
+                    value={newAlumnus.bloodGroup}
+                    onChange={(e) => setNewAlumnus({ ...newAlumnus, bloodGroup: e.target.value as any })}
+                    className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                  >
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={newAlumnus.email}
+                    onChange={(e) => setNewAlumnus({ ...newAlumnus, email: e.target.value })}
+                    placeholder="alumnus@domain.com"
+                    className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    value={newAlumnus.phone}
+                    onChange={(e) => setNewAlumnus({ ...newAlumnus, phone: e.target.value })}
+                    placeholder="+880 1711-000000"
+                    className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                    Chapter
+                  </label>
+                  <select
+                    value={newAlumnus.chapter}
+                    onChange={(e) => setNewAlumnus({ ...newAlumnus, chapter: e.target.value as any })}
+                    className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                  >
+                    <option value="Sylhet">Sylhet</option>
+                    <option value="Dhaka">Dhaka</option>
+                    <option value="Chittagong">Chittagong</option>
+                    <option value="North America">North America</option>
+                    <option value="Europe & UK">Europe & UK</option>
+                    <option value="Australia">Australia</option>
+                    <option value="Other International">Other International</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-academic-primary hover:bg-academic-primary-dark text-white text-xs font-semibold rounded uppercase tracking-wider shadow-xs"
+                >
+                  Save Alumnus Profile
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Existing Alumni Roster Table */}
+          <div className="academic-card p-6">
+            <h3 className="font-serif font-bold text-lg text-academic-dark mb-4 pb-2 border-b border-academic-border">
+              All Registered Alumni ({alumni.length})
+            </h3>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-academic-border text-academic-text-muted uppercase text-[10px] tracking-wider">
+                    <th className="py-2.5 px-3">Alumnus</th>
+                    <th className="py-2.5 px-3">Batch & Reg</th>
+                    <th className="py-2.5 px-3">Blood Group</th>
+                    <th className="py-2.5 px-3">Location & Chapter</th>
+                    <th className="py-2.5 px-3">Contact</th>
+                    <th className="py-2.5 px-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-academic-border/60">
+                  {alumni.map((a) => (
+                    <tr key={a.id} className="hover:bg-academic-bg/50">
+                      <td className="py-3 px-3">
+                        <div className="flex items-center space-x-2.5">
+                          <img
+                            src={a.avatarUrl}
+                            alt={a.name}
+                            className="w-8 h-8 rounded-full object-cover border border-academic-border"
+                          />
+                          <div>
+                            <p className="font-bold text-academic-dark">{a.name}</p>
+                            <p className="text-[11px] text-academic-primary">{a.currentRole} • {a.organization}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="font-mono font-medium text-academic-dark block">{a.batchSession}</span>
+                        <span className="text-[10px] text-academic-text-muted font-mono">{a.registrationNo || 'N/A'}</span>
+                      </td>
+                      <td className="py-3 px-3">
+                        {a.bloodGroup && (
+                          <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">
+                            <Droplet className="w-2.5 h-2.5 fill-current" />
+                            {a.bloodGroup}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-[11px]">
+                        <p className="font-medium text-academic-dark">{a.city}, {a.country}</p>
+                        <p className="text-academic-text-muted text-[10px]">{a.chapter || 'General'}</p>
+                      </td>
+                      <td className="py-3 px-3 text-[11px] text-academic-text-muted">
+                        <p>{a.email}</p>
+                        <p>{a.phone || '—'}</p>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <button
+                          onClick={() => handleDeleteAlumnus(a.id)}
+                          className="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition-colors text-xs"
+                          title="Delete alumnus"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: NOTICES & OFFICIAL CIRCULARS */}
+      {activeTab === 'notices' && (
+        <div className="space-y-8">
+          <div className="academic-card p-6 md:p-8 bg-academic-bg border border-academic-border">
+            <h3 className="font-serif font-bold text-lg text-academic-dark mb-4 pb-2 border-b border-academic-border flex items-center space-x-2">
+              <Bell className="w-5 h-5 text-academic-primary" />
+              <span>Publish Official Notice or Circular</span>
+            </h3>
+
+            <form onSubmit={handleAddNotice} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                  Notice Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newNotice.title}
+                  onChange={(e) => setNewNotice({ ...newNotice, title: e.target.value })}
+                  placeholder="e.g. Schedule of BSS 8th Semester Comprehensive Viva-Voce"
+                  className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                    Category *
+                  </label>
+                  <select
+                    value={newNotice.category}
+                    onChange={(e) => setNewNotice({ ...newNotice, category: e.target.value as any })}
+                    className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                  >
+                    <option value="Academic">Academic</option>
+                    <option value="Exam & Results">Exam & Results</option>
+                    <option value="GSC & Research">GSC & Research</option>
+                    <option value="Event">Event</option>
+                    <option value="Scholarship">Scholarship</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                    Publish Date
+                  </label>
+                  <input
+                    type="date"
+                    value={newNotice.publishedDate}
+                    onChange={(e) => setNewNotice({ ...newNotice, publishedDate: e.target.value })}
+                    className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                  />
+                </div>
+
+                <div className="flex items-center sm:pt-5">
+                  <label className="flex items-center space-x-2 text-xs font-bold text-red-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newNotice.urgent}
+                      onChange={(e) => setNewNotice({ ...newNotice, urgent: e.target.checked })}
+                      className="rounded border-academic-border text-red-600 focus:ring-red-500 h-4 w-4"
+                    />
+                    <span>Mark as Urgent Alert Banner</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-academic-dark uppercase mb-1">
+                  Notice Details / Body
+                </label>
+                <textarea
+                  rows={3}
+                  value={newNotice.description}
+                  onChange={(e) => setNewNotice({ ...newNotice, description: e.target.value })}
+                  placeholder="Official text, schedule instructions, and deadlines..."
+                  className="w-full px-3 py-2 bg-white rounded border border-academic-border text-xs"
+                />
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-academic-primary hover:bg-academic-primary-dark text-white text-xs font-semibold rounded uppercase tracking-wider shadow-xs"
+                >
+                  Publish Notice Live
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Notices Roster */}
+          <div className="academic-card p-6">
+            <h3 className="font-serif font-bold text-lg text-academic-dark mb-4 pb-2 border-b border-academic-border">
+              Published Circulars ({notices.length})
+            </h3>
+            <div className="divide-y divide-academic-border/60">
+              {notices.map((n) => (
+                <div key={n.id} className="py-3 flex items-start justify-between gap-4 text-xs">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      {n.urgent && (
+                        <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-bold text-[10px]">
+                          URGENT
+                        </span>
+                      )}
+                      <span className="px-1.5 py-0.5 rounded bg-academic-surface text-academic-primary font-bold text-[10px]">
+                        {n.category}
+                      </span>
+                      <span className="text-[10px] text-academic-text-muted">{n.publishedDate}</span>
+                    </div>
+                    <h4 className="font-bold text-academic-dark">{n.title}</h4>
+                    <p className="text-academic-text-muted mt-0.5 line-clamp-1">{n.description}</p>
+                  </div>
+
+                  <button
+                    onClick={() => handleDeleteNotice(n.id)}
+                    className="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition-colors text-xs flex-shrink-0"
+                    title="Delete notice"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: JOB POSTINGS & INTERNSHIPS */}
+      {activeTab === 'jobs' && (
+        <div className="space-y-6">
+          <div className="academic-card p-6">
+            <h3 className="font-serif font-bold text-lg text-academic-dark mb-4 pb-2 border-b border-academic-border">
+              Active Job Opportunities & Fellowships ({jobs.length})
+            </h3>
+
+            <div className="divide-y divide-academic-border/60">
+              {jobs.map((j) => (
+                <div key={j.id} className="py-4 flex items-start justify-between gap-4 text-xs">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-2 py-0.5 rounded bg-academic-surface text-academic-primary font-bold text-[10px]">
+                        {j.category}
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-academic-bg text-academic-dark font-medium text-[10px]">
+                        {j.type}
+                      </span>
+                      <span className="text-[10px] text-red-600 font-medium">Deadline: {j.deadline}</span>
+                    </div>
+                    <h4 className="font-bold text-sm text-academic-dark">{j.title}</h4>
+                    <p className="text-academic-primary font-medium">{j.organization} • {j.location}</p>
+                    {j.postedByAlumniName && (
+                      <p className="text-[11px] text-academic-text-muted mt-0.5">Posted by: {j.postedByAlumniName}</p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => handleDeleteJob(j.id)}
+                    className="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition-colors text-xs flex-shrink-0"
+                    title="Remove posting"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: GIVING FUND & DONATIONS */}
+      {activeTab === 'donations' && (
+        <div className="space-y-6">
+          <div className="academic-card p-6">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-academic-border">
+              <h3 className="font-serif font-bold text-lg text-academic-dark flex items-center gap-2">
+                <Heart className="w-5 h-5 text-red-500" />
+                <span>Alumni Giving Fund & Endowment Ledger</span>
+              </h3>
+              <span className="text-xs font-mono font-bold text-academic-primary">
+                Total Pledged: BDT {pledges.reduce((acc, p) => acc + p.amount, 0).toLocaleString()}
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-academic-border text-academic-text-muted uppercase text-[10px] tracking-wider">
+                    <th className="py-2.5 px-3">Donor</th>
+                    <th className="py-2.5 px-3">Batch</th>
+                    <th className="py-2.5 px-3">Cause</th>
+                    <th className="py-2.5 px-3">Amount</th>
+                    <th className="py-2.5 px-3">Channel & Ref</th>
+                    <th className="py-2.5 px-3">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-academic-border/60">
+                  {pledges.map((p) => (
+                    <tr key={p.id} className="hover:bg-academic-bg/50">
+                      <td className="py-3 px-3">
+                        <span className="font-bold text-academic-dark block">{p.donorName}</span>
+                        <span className="text-[10px] text-academic-text-muted">{p.donorEmail}</span>
+                      </td>
+                      <td className="py-3 px-3 font-mono">{p.donorBatch || '—'}</td>
+                      <td className="py-3 px-3">
+                        <span className="px-2 py-0.5 rounded bg-academic-surface text-academic-primary font-medium text-[10px]">
+                          {p.cause}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 font-mono font-bold text-academic-primary">
+                        BDT {p.amount.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="font-semibold text-academic-dark block">{p.paymentMethod}</span>
+                        <span className="text-[10px] font-mono text-academic-text-muted">{p.transactionRef || 'N/A'}</span>
+                      </td>
+                      <td className="py-3 px-3 text-[10px] text-academic-text-muted font-mono">
+                        {new Date(p.pledgedAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

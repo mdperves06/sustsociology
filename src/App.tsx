@@ -20,6 +20,8 @@ import { AlumniPage } from './pages/AlumniPage';
 import { SociologySocietyPage } from './pages/SociologySocietyPage';
 import { ContactPage } from './pages/ContactPage';
 import { AdminPage } from './pages/AdminPage';
+import { LibraryPage } from './pages/LibraryPage';
+import { NoticesEventsPage } from './pages/NoticesEventsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 // Scroll to top helper
@@ -50,10 +52,13 @@ export const App: React.FC = () => {
           <Route path="/batch/:batchId/student/:studentId" element={<StudentProfilePage />} />
           <Route path="/research" element={<ResearchPortalPage />} />
           <Route path="/research/:id" element={<ResearchDetailPage />} />
+          <Route path="/library" element={<LibraryPage />} />
           <Route path="/student-success-story" element={<SuccessStoryPage />} />
           <Route path="/student-success-story/:id" element={<SuccessStoryDetailPage />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/alumni" element={<AlumniPage />} />
+          <Route path="/notices" element={<NoticesEventsPage />} />
+          <Route path="/events" element={<NoticesEventsPage />} />
           <Route path="/sociology-society" element={<SociologySocietyPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/admin" element={<AdminPage />} />
